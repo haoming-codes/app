@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-postcorrection"
+version = "0.1.0"
+description = "IPA-based named-entity correction for Chinese ASR output"
+readme = "README.md"
+authors = [
+  {name = "OpenAI Assistant"}
+]
+requires-python = ">=3.10"
+dependencies = [
+  "pypinyin>=0.50",
+  "panphon>=0.20",
+]
+
+[project.scripts]
+asr-correct = "asr_postcorrection.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
