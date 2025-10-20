@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-lexicon-corrector"
+version = "0.1.0"
+description = "Tools for correcting Chinese ASR outputs using phonetic distance over lexicons"
+readme = "README.md"
+authors = [
+  { name = "OpenAI Assistant" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "pypinyin>=0.55",
+  "panphon>=0.22",
+  "pyclts>=3.2",
+  "abydos @ git+https://github.com/denizberkin/abydos.git"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/openai"
