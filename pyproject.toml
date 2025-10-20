@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-corrector"
+version = "0.1.0"
+description = "RAG-like correction pipeline for multilingual ASR outputs"
+authors = [{name = "Generated"}]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "epitran",
+    "panphon",
+    "pypinyin",
+    "numpy",
+    "clts",
+    "segments",
+    "abydos @ git+https://github.com/denizberkin/abydos.git",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools]
+packages = ["asr_corrector"]
