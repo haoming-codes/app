@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-corrector"
+version = "0.1.0"
+description = "Tools for correcting ASR outputs with phonetic distance metrics"
+authors = [{name = "Auto Generated", email = "auto@example.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "epitran",
+    "panphon",
+    "pypinyin",
+    "regex",
+    "numpy",
+    "pyclts",
+    "abydos @ git+https://github.com/denizberkin/abydos.git"
+]
+
+[project.urls]
+Homepage = "https://example.com/asr-corrector"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["asr_corrector"]
