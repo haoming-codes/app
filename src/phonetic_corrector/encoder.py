@@ -28,11 +28,27 @@ class PhoneticEncoder:
 
     def __init__(self, *, errors: str = "keep") -> None:
         try:
-            from pypinyin.contrib.ipa import pinyin as ipa_pinyin  # type: ignore
+            from pypinyin import Style, pinyin
         except ImportError as exc:  # pragma: no cover - defensive branch
             raise MissingDependencyError(
                 "pypinyin is required for phonetic encoding. Install it with 'pip install pypinyin'."
             ) from exc
+
+        def ipa_pinyin(
+            text: str,
+            *,
+            strict: bool,
+            errors: Callable[[str], List[str]] | str,
+        ) -> List[List[str]]:
+            """Proxy to :func:`pypinyin.pinyin` with IPA output."""
+
+            return pinyin(
+                text,
+                style=Style.IPA,
+                heteronym=True,
+                strict=strict,
+                errors=errors,
+            )
 
         self._ipa_pinyin: Callable[..., List[List[str]]] = ipa_pinyin
         self._errors = errors
