@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-postprocessor"
+version = "0.1.0"
+description = "Phonetic post-processing for Chinese ASR outputs using RAG-like correction"
+authors = [
+    { name = "AutoGen", email = "autogen@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["ASR", "Chinese", "phonetics", "post-processing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pypinyin>=0.48.0",
+    "panphon>=0.20",
+    "abydos>=0.5.0",
+    "numpy>=1.24"
+]
+
+[project.urls]
+Homepage = "https://example.com/asr-postprocessor"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
