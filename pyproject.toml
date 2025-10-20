@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-corrector"
+version = "0.1.0"
+description = "RAG-inspired correction pipeline for multilingual ASR outputs"
+readme = "README.md"
+authors = [{name = "OpenAI Assistant"}]
+requires-python = ">=3.9"
+dependencies = [
+    "phonemizer>=3.2",
+    "panphon>=0.19",
+    "pypinyin>=0.48",
+    "numpy>=1.23",
+    "pyclts>=3.0",
+    "abydos @ git+https://github.com/denizberkin/abydos.git",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.0",
+    "isort>=5.10",
+    "pytest>=7.0",
+]
+
+[project.urls]
+Homepage = "https://example.com/asr-corrector"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
