@@ -1,0 +1,26 @@
+[project]
+name = "rag-corrector"
+version = "0.1.0"
+description = "Post-processing utilities for correcting Chinese ASR transcripts with phonetic entity matching"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "OpenAI Assistant"}
+]
+dependencies = [
+  "pypinyin>=0.55",
+  "panphon>=0.22",
+]
+
+[project.urls]
+homepage = "https://example.com/rag-corrector"
+repository = "https://example.com/rag-corrector.git"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rag_corrector*"]
