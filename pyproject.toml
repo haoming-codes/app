@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asr-correction"
+version = "0.1.0"
+description = "RAG-like correction utilities for multilingual ASR outputs"
+readme = "README.md"
+authors = [{name = "Auto Generated"}]
+requires-python = ">=3.9"
+dependencies = [
+    "phonemizer>=3.2.1",
+    "pypinyin>=0.49.0",
+    "panphon>=0.20",
+    "numpy>=1.24",
+    "pyclts>=3.1",
+    "abydos @ git+https://github.com/denizberkin/abydos.git",
+]
+
+[project.optional-dependencies]
+development = [
+    "pytest>=7.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
