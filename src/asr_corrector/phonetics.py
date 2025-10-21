@@ -86,7 +86,7 @@ def normalize_text_for_phonemization(text: str) -> str:
 
 def ipa_for_text(text: str) -> PhoneticRepresentation:
     normalized = normalize_text_for_phonemization(text)
-    language = "cmn" if is_cjk(text) else "en-us"
+    language = "zh" if is_cjk(text) else "en-us"
     ipa = _phonemize(normalized, language)
     detoned = IPA_TONE_PATTERN.sub("", ipa)
     tones = tuple(_extract_tones(text)) if is_cjk(text) else tuple()
