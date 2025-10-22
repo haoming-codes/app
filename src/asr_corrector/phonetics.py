@@ -7,7 +7,7 @@ from functools import lru_cache
 from typing import Iterable, List, Sequence, Tuple
 
 import numpy as np
-from phonemizer.phonemize import phonemize
+from epitran import Epitran
 from pypinyin import Style, lazy_pinyin
 
 LETTER_NAMES = {
@@ -52,16 +52,23 @@ class PhoneticRepresentation:
     tones: Tuple[str, ...]
 
 
+_PUNCTUATION_PATTERN = re.compile(r"[;:,.!?¡¿—…"'\-()]")
+
+
+@lru_cache(maxsize=16)
+def _get_epitran(language: str) -> Epitran:
+    return Epitran(language)
+
+
+def _sanitize_transliteration(text: str) -> str:
+    cleaned = _PUNCTUATION_PATTERN.sub(" ", text)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 @lru_cache(maxsize=2048)
 def _phonemize(text: str, language: str) -> str:
-    punctuation = ';:,.!?¡¿—…"\'-()'
-    return phonemize(
-        text,
-        language=language,
-        backend='espeak',
-        strip=True,
-        punctuation_marks=punctuation,
-    )
+    transliterated = _get_epitran(language).transliterate(text)
+    return _sanitize_transliteration(transliterated)
 
 
 def _expand_acronym(text: str) -> str:
@@ -86,7 +93,7 @@ def normalize_text_for_phonemization(text: str) -> str:
 
 def ipa_for_text(text: str) -> PhoneticRepresentation:
     normalized = normalize_text_for_phonemization(text)
-    language = "cmn" if is_cjk(text) else "en-us"
+    language = "cmn-Hans" if is_cjk(text) else "eng-Latn"
     ipa = _phonemize(normalized, language)
     detoned = IPA_TONE_PATTERN.sub("", ipa)
     tones = tuple(_extract_tones(text)) if is_cjk(text) else tuple()
