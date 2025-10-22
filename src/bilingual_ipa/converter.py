@@ -55,7 +55,7 @@ def text_to_ipa(
 
     for segment in segments:
         language_code = segmenter.classify(segment)
-        if language_code is None:
+        if language_code is None and len(segment.strip()) > 0:
             result.append(segment)
             continue
         ipa = phonemize(segment, language=language_code, backend="espeak", **phonemize_kwargs)
