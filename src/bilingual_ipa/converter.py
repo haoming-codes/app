@@ -23,7 +23,7 @@ class LanguageSegmenter:
         if _CHINESE_RE.match(segment):
             return "cmn"
         if _ENGLISH_RE.match(segment):
-            return "en"
+            return "en-us"
         return None
 
 
