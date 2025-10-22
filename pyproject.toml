@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phonetic-rag"
+version = "0.1.0"
+description = "Phonetic distance utilities and ASR correction helpers"
+authors = [{name = "AI Assistant"}]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "phonemizer>=3.3",
+    "panphon>=0.20",
+    "pypinyin>=0.49",
+    "numpy>=1.26",
+    "abydos @ git+https://github.com/denizberkin/abydos.git",
+]
+
+[project.urls]
+homepage = "https://example.com"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra"
+testpaths = ["tests"]
