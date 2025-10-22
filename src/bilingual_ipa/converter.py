@@ -65,6 +65,7 @@ def text_to_ipa(
             ipa = re.sub(r"\s+", "", ipa)
         print(f"'{ipa}'")
         result.append(ipa)
+    print(result)
 
     return "".join(result)
 
