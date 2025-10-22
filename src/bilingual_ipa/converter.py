@@ -36,7 +36,14 @@ def _validate_kwargs(kwargs: dict[str, object]) -> None:
     kwargs.pop("backend", None)
 
 
-def text_to_ipa(text: str, *, segmenter: LanguageSegmenter | None = None, **phonemize_kwargs) -> str:
+def text_to_ipa(
+    text: str,
+    *,
+    segmenter: LanguageSegmenter | None = None,
+    remove_chinese_tone_marks: bool = False,
+    remove_english_spaces: bool = False,
+    **phonemize_kwargs,
+) -> str:
     """Convert Chinese/English text into IPA using phonemizer."""
     if segmenter is None:
         segmenter = LanguageSegmenter()
@@ -52,6 +59,10 @@ def text_to_ipa(text: str, *, segmenter: LanguageSegmenter | None = None, **phon
             result.append(segment)
             continue
         ipa = phonemize(segment, language=language_code, backend="espeak", **phonemize_kwargs)
+        if language_code == "cmn" and remove_chinese_tone_marks:
+            ipa = re.sub(r"\d", "", ipa)
+        if language_code == "en" and remove_english_spaces:
+            ipa = re.sub(r"\s+", "", ipa)
         result.append(ipa)
 
     return "".join(result)
