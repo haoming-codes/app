@@ -96,7 +96,7 @@ def text_to_ipa(
         if language_code.startswith("en") and remove_english_spaces:
             ipa = re.sub(r"\s+", "", ipa)
         result.append(ipa)
-
+    print(result)
     return "".join(result)
 
 
