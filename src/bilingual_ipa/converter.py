@@ -36,9 +36,6 @@ class LanguageSegmenter:
 
 
 def _normalize_english_segment(segment: str) -> str:
-    """Insert spaces after punctuation and between letters in all-caps words."""
-
-    # segment = _PUNCT_NEEDS_SPACE_RE.sub(r"\1 ", segment)
     return _ALL_CAPS_WORD_RE.sub(lambda match: " ".join(match.group(0)), segment)
 
 
