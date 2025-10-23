@@ -4,8 +4,15 @@ from __future__ import annotations
 import re
 from typing import List
 
-from phonemizer import phonemize
+from dragonmapper.hanzi import to_ipa as hanzi_to_ipa
+from eng_to_ipa import convert as english_to_ipa
+from dragonmapper.transcriptions import _IPA_TONES
 
+_IPA_TONES = "".join(_IPA_TONES.values())
+_STRESS = "ˈˌ"
+_NON_IPA_TONES_RE = re.compile(f"[^{_IPA_TONES}]")
+_NON_STRESS_RE = re.compile(f"[^{_STRESS}]")
+_IPA_TONES_STRESS_RE = re.compile(f"[{_IPA_TONES}{_STRESS}]")
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
@@ -27,28 +34,16 @@ class LanguageSegmenter:
         return None
 
 
-def _validate_kwargs(kwargs: dict[str, object]) -> None:
-    if "language" in kwargs:
-        raise ValueError("The 'language' argument is determined automatically and must not be provided.")
-    backend = kwargs.get("backend")
-    if backend is not None and backend != "espeak":
-        raise ValueError("Only the 'espeak' backend is supported.")
-    kwargs.pop("backend", None)
-
-
 def text_to_ipa(
     text: str,
     *,
     segmenter: LanguageSegmenter | None = None,
     get_tone_marks: bool = False,
     get_stress_marks: bool = False,
-    **phonemize_kwargs,
 ) -> str:
-    """Convert Chinese/English text into IPA using phonemizer."""
+    """Convert Chinese/English text into IPA using ``eng_to_ipa`` and ``dragonmapper``."""
     if segmenter is None:
         segmenter = LanguageSegmenter()
-
-    _validate_kwargs(phonemize_kwargs)
 
     segments = segmenter.split(text)
     grouped_segments: List[tuple[str | None, str]] = []
@@ -92,11 +87,17 @@ def text_to_ipa(
             result.append(segment)
             continue
 
-        ipa = phonemize(segment, language=language_code, backend="espeak", with_stress=True, **phonemize_kwargs)
-        print(ipa)
-        tone_marks = re.sub(r'\D', ' ', ipa)
-        stress_marks = re.sub(r"[^ˈ]", " ", ipa)
-        phones = re.sub(r"[ˈ\d]", "", ipa)
+        if language_code.startswith("en"):
+            ipa = english_to_ipa(segment, keep_punct=False)
+        elif language_code == "cmn":
+            ipa = hanzi_to_ipa(segment, delimiter='')
+        else:
+            raise ValueError(f"Unsupported language code: {language_code}")
+        ipa = re.sub(r"\s+", "", ipa)
+        ipa = re.sub(r'\\p{P}', '', ipa, flags=re.UNICODE)
+        tone_marks = _NON_IPA_TONES_RE.sub(" ", ipa)
+        stress_marks = _NON_STRESS_RE.sub(" ", ipa)
+        phones = _IPA_TONES_STRESS_RE.sub("", ipa)
         # if language_code == "cmn" and remove_chinese_tone_marks:
         #     ipa = re.sub(r"\d", "", ipa)
         # if language_code.startswith("en") and remove_english_spaces:
@@ -104,7 +105,7 @@ def text_to_ipa(
         result.append(phones)
         result_tone_marks.append(tone_marks)
         result_stress_marks.append(stress_marks)
-
+    print(result)
     results = ["".join(result)]
     if get_tone_marks:
         results.append("".join(result_tone_marks))
