@@ -27,6 +27,9 @@ class WindowDistance:
     distance: float
     """Aggregated phonetic distance to the query phrase."""
 
+    phrase: str | None = None
+    """Phrase compared against the window, when available."""
+
 
 def _ensure_non_empty(result: IPAConversionResult, *, label: str) -> None:
     if not result.phones:
@@ -125,11 +128,66 @@ def window_phonetic_distances(
                 phones=window_phones,
                 syllable_count=syllables,
                 distance=distance,
+                phrase=phrase,
             )
         )
 
     return windows
 
 
-__all__ = ["WindowDistance", "window_phonetic_distances"]
+class PhoneticWindowRetriever:
+    """Retrieve phonetic window matches for a sentence against a vocabulary."""
+
+    def __init__(
+        self,
+        *,
+        metrics: Iterable[str] | str | None = None,
+        weights: Mapping[str, float] | None = None,
+        aggregate: AggregateStrategy = "mean",
+        syllable_tolerance: int = 1,
+    ) -> None:
+        self._metrics = metrics
+        self._weights = weights
+        self._aggregate = aggregate
+        self._syllable_tolerance = syllable_tolerance
+        self._results: list[WindowDistance] = []
+
+    @property
+    def results(self) -> Sequence[WindowDistance]:
+        """Return the latest computed distances."""
+
+        return self._results
+
+    def compute_all_distances(self, sentence: str, vocabulary: Iterable[str]) -> list[WindowDistance]:
+        """Compute distances between ``sentence`` and each phrase in ``vocabulary``."""
+
+        distances: list[WindowDistance] = []
+        for phrase in vocabulary:
+            for window in window_phonetic_distances(
+                sentence,
+                phrase,
+                metrics=self._metrics,
+                weights=self._weights,
+                aggregate=self._aggregate,
+                syllable_tolerance=self._syllable_tolerance,
+            ):
+                distances.append(window)
+
+        self._results = sorted(distances, key=lambda wd: wd.distance)
+        return self._results
+
+    def top_k(self, k: int) -> list[WindowDistance]:
+        """Return the ``k`` closest windows to the vocabulary phrases."""
+
+        if k < 0:
+            raise ValueError("k must be non-negative")
+        return list(self._results[:k]) if k else []
+
+    def within_threshold(self, threshold: float) -> list[WindowDistance]:
+        """Return all windows whose distance is below ``threshold``."""
+
+        return [window for window in self._results if window.distance <= threshold]
+
+
+__all__ = ["WindowDistance", "window_phonetic_distances", "PhoneticWindowRetriever"]
 
