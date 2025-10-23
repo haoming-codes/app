@@ -82,11 +82,12 @@ def text_to_ipa(
             continue
 
         if language_code.startswith("en"):
-            ipa = english_to_ipa(segment)
+            ipa = english_to_ipa(segment, keep_punct=False)
         elif language_code == "cmn":
             ipa = hanzi_to_ipa(segment, delimiter='')
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
+        ipa = re.sub(r"\s+", "", ipa)
         tone_marks = re.sub(r'\D', ' ', ipa)
         stress_marks = re.sub(r"[^ˈ]", " ", ipa)
         phones = re.sub(r"[ˈ\d]", "", ipa)
