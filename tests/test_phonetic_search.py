@@ -6,7 +6,10 @@ import pytest
 from bilingual_ipa import text_to_ipa
 from bilingual_ipa.conversion import IPAConversionResult
 from bilingual_ipa.distances import CompositeDistanceCalculator, PhoneDistanceCalculator, ToneDistanceCalculator
-from bilingual_ipa.phonetic_search import window_phonetic_distances
+from bilingual_ipa.phonetic_search import (
+    PhoneticWindowRewriter,
+    window_phonetic_distances,
+)
 
 
 def test_window_phonetic_distances_identifies_english_phrase() -> None:
@@ -43,6 +46,7 @@ def test_window_phonetic_distances_identifies_english_phrase() -> None:
         tone_marks=list(sentence_result.tone_marks[best.start_index : best.end_index]),
         stress_marks=list(sentence_result.stress_marks[best.start_index : best.end_index]),
         syllable_counts=list(sentence_result.syllable_counts[best.start_index : best.end_index]),
+        tokens=list(sentence_result.tokens[best.start_index : best.end_index]),
     )
     assert best.distance == pytest.approx(
         calculator.distance(window_result, phrase_result)
@@ -83,6 +87,7 @@ def test_window_phonetic_distances_handles_chinese_phrase() -> None:
         tone_marks=list(sentence_result.tone_marks[best.start_index : best.end_index]),
         stress_marks=list(sentence_result.stress_marks[best.start_index : best.end_index]),
         syllable_counts=list(sentence_result.syllable_counts[best.start_index : best.end_index]),
+        tokens=list(sentence_result.tokens[best.start_index : best.end_index]),
     )
     assert best.distance == pytest.approx(
         calculator.distance(window_result, phrase_result)
@@ -92,4 +97,36 @@ def test_window_phonetic_distances_handles_chinese_phrase() -> None:
 def test_window_phonetic_distances_requires_phrase_phones() -> None:
     with pytest.raises(ValueError):
         window_phonetic_distances("hello world", "!!!")
+
+
+def test_phonetic_window_rewriter_rewrites_best_match() -> None:
+    sentence = "你好世界"
+    vocabulary = ["世界"]
+
+    rewriter = PhoneticWindowRewriter(
+        distance_calculator=PhoneDistanceCalculator(
+            metrics="phonetic_edit_distance",
+            aggregate="sum",
+        ),
+        syllable_tolerance=0,
+    )
+    rewritten = rewriter.retrieve_and_rewrite(sentence, vocabulary, threshold=0.5)
+
+    assert rewritten == ["你", "好", "世界"]
+    assert rewriter.results[0].phrase == "世界"
+
+
+def test_phonetic_window_rewriter_respects_threshold() -> None:
+    sentence = "你好世界"
+    vocabulary = ["朋友"]
+
+    rewriter = PhoneticWindowRewriter(
+        distance_calculator=PhoneDistanceCalculator(
+            metrics="phonetic_edit_distance",
+            aggregate="sum",
+        )
+    )
+    rewritten = rewriter.retrieve_and_rewrite(sentence, vocabulary, threshold=0.1)
+
+    assert rewritten == ["你", "好", "世", "界"]
 

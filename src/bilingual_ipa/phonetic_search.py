@@ -128,6 +128,7 @@ def window_phonetic_distances(
             tone_marks=list(sentence_result.tone_marks[start:end]),
             stress_marks=list(sentence_result.stress_marks[start:end]),
             syllable_counts=list(sentence_result.syllable_counts[start:end]),
+            tokens=list(sentence_result.tokens[start:end]),
         )
         distance = distance_calculator.distance(window_result, phrase_result)
         windows.append(
@@ -197,5 +198,52 @@ class PhoneticWindowRetriever:
         return [window for window in self._results if window.distance <= threshold]
 
 
-__all__ = ["WindowDistance", "window_phonetic_distances", "PhoneticWindowRetriever"]
+class PhoneticWindowRewriter(PhoneticWindowRetriever):
+    """Retrieve phonetic matches and rewrite the original transcription."""
+
+    def retrieve_and_rewrite(
+        self,
+        sentence: str,
+        vocabulary: Iterable[str],
+        *,
+        threshold: float,
+    ) -> list[str]:
+        """Return the tokenized transcription with the closest match rewritten.
+
+        The sentence is converted to IPA to recover the original tokenization. The
+        method computes phonetic distances against each phrase in ``vocabulary``
+        and rewrites the sentence tokens using the closest match when its distance
+        falls below ``threshold``. If no acceptable match exists, the original
+        tokenization is returned unchanged.
+        """
+
+        sentence_result = text_to_ipa(sentence)
+        if not sentence_result.tokens:
+            return list(sentence_result.tokens)
+
+        results = self.compute_all_distances(sentence, vocabulary)
+        if not results:
+            return list(sentence_result.tokens)
+
+        best = results[0]
+        if best.phrase is None:
+            return list(sentence_result.tokens)
+
+        if best.distance > threshold:
+            return list(sentence_result.tokens)
+
+        if len(results) > 1 and results[1].distance <= best.distance:
+            return list(sentence_result.tokens)
+
+        rewritten = list(sentence_result.tokens)
+        rewritten[best.start_index : best.end_index] = [best.phrase]
+        return rewritten
+
+
+__all__ = [
+    "WindowDistance",
+    "window_phonetic_distances",
+    "PhoneticWindowRetriever",
+    "PhoneticWindowRewriter",
+]
 
