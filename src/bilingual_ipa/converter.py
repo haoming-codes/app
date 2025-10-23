@@ -16,6 +16,7 @@ _IPA_TONES_STRESS_RE = re.compile(f"[{_IPA_TONES}{_STRESS}]")
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
+_ALL_CAPS_WORD_RE = re.compile(r"\b[A-Z]{2,}\b")
 
 
 class LanguageSegmenter:
@@ -32,6 +33,10 @@ class LanguageSegmenter:
         if _ENGLISH_RE.match(segment):
             return "en-us"
         return None
+
+
+def _normalize_english_segment(segment: str) -> str:
+    return _ALL_CAPS_WORD_RE.sub(lambda match: " ".join(match.group(0)), segment)
 
 
 def text_to_ipa(
@@ -87,14 +92,14 @@ def text_to_ipa(
             result.append(segment)
             continue
 
+        segment = re.sub(r"\W+", ' ', segment)
         if language_code.startswith("en"):
-            ipa = english_to_ipa(segment, keep_punct=False)
+            ipa = english_to_ipa(_normalize_english_segment(segment), keep_punct=False)
         elif language_code == "cmn":
             ipa = hanzi_to_ipa(segment, delimiter='')
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
         ipa = re.sub(r"\s+", "", ipa)
-        ipa = re.sub(r'\\p{P}', '', ipa, flags=re.UNICODE)
         tone_marks = _NON_IPA_TONES_RE.sub(" ", ipa)
         stress_marks = _NON_STRESS_RE.sub(" ", ipa)
         phones = _IPA_TONES_STRESS_RE.sub("", ipa)
@@ -105,7 +110,7 @@ def text_to_ipa(
         result.append(phones)
         result_tone_marks.append(tone_marks)
         result_stress_marks.append(stress_marks)
-    print(result)
+        
     results = ["".join(result)]
     if get_tone_marks:
         results.append("".join(result_tone_marks))
