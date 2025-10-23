@@ -1,11 +1,17 @@
 """Sliding-window phonetic search utilities."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence
+from typing import Sequence
 
-from .converter import IPAConversionResult, text_to_ipa
-from .phone_distance import AggregateStrategy, phone_distance
+from .conversion import IPAConversionResult, text_to_ipa
+from .distances import (
+    CompositeDistanceCalculator,
+    DistanceCalculator,
+    PhoneDistanceCalculator,
+    ToneDistanceCalculator,
+)
 
 
 @dataclass(frozen=True)
@@ -36,14 +42,13 @@ def _ensure_non_empty(result: IPAConversionResult, *, label: str) -> None:
         raise ValueError(f"{label} produced no convertible IPA phones.")
 
 
-def _phrase_ipa(phrase: str) -> tuple[str, int]:
+def _phrase_result(phrase: str) -> tuple[IPAConversionResult, int]:
     phrase_result = text_to_ipa(phrase)
     _ensure_non_empty(phrase_result, label="Phrase")
-    combined = "".join(phrase_result.phones)
     syllable_count = sum(phrase_result.syllable_counts)
     if syllable_count <= 0:
         raise ValueError("Phrase must contain at least one syllable.")
-    return combined, syllable_count
+    return phrase_result, syllable_count
 
 
 def _iter_windows(
@@ -71,9 +76,7 @@ def window_phonetic_distances(
     sentence: str,
     phrase: str,
     *,
-    metrics: Iterable[str] | str | None = None,
-    weights: Mapping[str, float] | None = None,
-    aggregate: AggregateStrategy = "mean",
+    distance_calculator: DistanceCalculator | None = None,
     syllable_tolerance: int = 1,
 ) -> list[WindowDistance]:
     """Compute phonetic distances between a query phrase and windows in a sentence.
@@ -82,14 +85,14 @@ def window_phonetic_distances(
     phones are evaluated where the total number of syllables is close to the
     number of syllables of ``phrase`` (within ``syllable_tolerance``). Each
     window's phones are joined before calculating the phonetic distance to the
-    joined phones of the query phrase using :func:`phone_distance`.
+    query phrase using the provided :class:`~bilingual_ipa.distances.DistanceCalculator`.
 
     Args:
         sentence: The sentence containing potential matches.
         phrase: The query phrase to compare against the sentence windows.
-        metrics: Optional set of metric names to pass to :func:`phone_distance`.
-        weights: Optional metric weights supplied to :func:`phone_distance`.
-        aggregate: Aggregation strategy passed to :func:`phone_distance`.
+        distance_calculator: Distance calculator used to compare the phrase and
+            each window. If omitted, a composite calculator that combines phone
+            and tone distances is used.
         syllable_tolerance: Allowed difference between the number of syllables in
             a window and the query phrase.
 
@@ -103,24 +106,30 @@ def window_phonetic_distances(
             syllables, or if ``syllable_tolerance`` is negative.
     """
 
-    phrase_phone, phrase_syllables = _phrase_ipa(phrase)
+    phrase_result, phrase_syllables = _phrase_result(phrase)
 
     sentence_result = text_to_ipa(sentence)
     if not sentence_result.phones:
         return []
+
+    if distance_calculator is None:
+        distance_calculator = CompositeDistanceCalculator(
+            [PhoneDistanceCalculator(), ToneDistanceCalculator()],
+            aggregate="sum",
+        )
 
     windows: list[WindowDistance] = []
     for start, end, syllables in _iter_windows(
         sentence_result.syllable_counts, phrase_syllables, syllable_tolerance
     ):
         window_phones = "".join(sentence_result.phones[start:end])
-        distance = phone_distance(
-            window_phones,
-            phrase_phone,
-            metrics,
-            weights=weights,
-            aggregate=aggregate,
+        window_result = IPAConversionResult(
+            phones=list(sentence_result.phones[start:end]),
+            tone_marks=list(sentence_result.tone_marks[start:end]),
+            stress_marks=list(sentence_result.stress_marks[start:end]),
+            syllable_counts=list(sentence_result.syllable_counts[start:end]),
         )
+        distance = distance_calculator.distance(window_result, phrase_result)
         windows.append(
             WindowDistance(
                 start_index=start,
@@ -141,14 +150,15 @@ class PhoneticWindowRetriever:
     def __init__(
         self,
         *,
-        metrics: Iterable[str] | str | None = None,
-        weights: Mapping[str, float] | None = None,
-        aggregate: AggregateStrategy = "mean",
+        distance_calculator: DistanceCalculator | None = None,
         syllable_tolerance: int = 1,
     ) -> None:
-        self._metrics = metrics
-        self._weights = weights
-        self._aggregate = aggregate
+        if distance_calculator is None:
+            distance_calculator = CompositeDistanceCalculator(
+                [PhoneDistanceCalculator(), ToneDistanceCalculator()],
+                aggregate="sum",
+            )
+        self._distance_calculator = distance_calculator
         self._syllable_tolerance = syllable_tolerance
         self._results: list[WindowDistance] = []
 
@@ -166,9 +176,7 @@ class PhoneticWindowRetriever:
             for window in window_phonetic_distances(
                 sentence,
                 phrase,
-                metrics=self._metrics,
-                weights=self._weights,
-                aggregate=self._aggregate,
+                distance_calculator=self._distance_calculator,
                 syllable_tolerance=self._syllable_tolerance,
             ):
                 distances.append(window)

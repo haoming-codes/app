@@ -15,6 +15,7 @@ dependencies = [
     "dragonmapper>=0.3",
     "abydos @ git+https://github.com/denizberkin/abydos.git",
     "panphon>=0.20",
+    "sktime>=0.24.0",
 ]
 
 [project.urls]

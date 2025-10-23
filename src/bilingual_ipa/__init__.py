@@ -1,12 +1,12 @@
 """Public API for bilingual IPA conversion."""
-from .converter import IPAConversionResult, LanguageSegmenter, text_to_ipa
-from .phone_distance import (
-    AVAILABLE_DISTANCE_METRICS,
+from .conversion import IPAConversionResult, LanguageSegmenter, text_to_ipa
+from .distances import (
     AggregateStrategy,
+    CompositeDistanceCalculator,
+    DistanceCalculator,
     PhoneDistanceCallable,
-    combine_distances,
-    compute_distances,
-    phone_distance,
+    PhoneDistanceCalculator,
+    ToneDistanceCalculator,
 )
 from .phonetic_search import WindowDistance, window_phonetic_distances
 
@@ -14,12 +14,12 @@ __all__ = [
     "text_to_ipa",
     "LanguageSegmenter",
     "IPAConversionResult",
-    "AVAILABLE_DISTANCE_METRICS",
     "AggregateStrategy",
+    "DistanceCalculator",
     "PhoneDistanceCallable",
-    "combine_distances",
-    "compute_distances",
-    "phone_distance",
+    "PhoneDistanceCalculator",
+    "ToneDistanceCalculator",
+    "CompositeDistanceCalculator",
     "WindowDistance",
     "window_phonetic_distances",
 ]

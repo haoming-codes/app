@@ -7,8 +7,8 @@ from bilingual_ipa import text_to_ipa
 
 def test_text_to_ipa_processes_bilingual_text():
     with (
-        patch("bilingual_ipa.converter.english_to_ipa", return_value="həˈləʊ") as mock_english,
-        patch("bilingual_ipa.converter.hanzi_to_ipa", return_value="ni˧˥˩") as mock_chinese,
+        patch("bilingual_ipa.conversion.english_to_ipa", return_value="həˈləʊ") as mock_english,
+        patch("bilingual_ipa.conversion.hanzi_to_ipa", return_value="ni˧˥˩") as mock_chinese,
     ):
         result = text_to_ipa("Hello你好")
 
@@ -22,9 +22,9 @@ def test_text_to_ipa_processes_bilingual_text():
 
 def test_text_to_ipa_preserves_non_language_tokens():
     with (
-        patch("bilingual_ipa.converter.english_to_ipa", side_effect=["həˈləʊ"]) as mock_english,
+        patch("bilingual_ipa.conversion.english_to_ipa", side_effect=["həˈləʊ"]) as mock_english,
         patch(
-            "bilingual_ipa.converter.hanzi_to_ipa",
+            "bilingual_ipa.conversion.hanzi_to_ipa",
             side_effect=["ʂɤ˥˩", "tɕjɛ˥˩", "ni˧˥˩", "xɑʊ˥˩"],
         ) as mock_chinese,
     ):
@@ -52,7 +52,7 @@ def test_consecutive_language_segments_include_spacing_and_punctuation():
     text = "你好。hello world 你好, 你在吗"
     with (
         patch(
-            "bilingual_ipa.converter.hanzi_to_ipa",
+            "bilingual_ipa.conversion.hanzi_to_ipa",
             side_effect=[
                 "c1",
                 "c2",
@@ -63,7 +63,7 @@ def test_consecutive_language_segments_include_spacing_and_punctuation():
                 "c7",
             ],
         ) as mock_chinese,
-        patch("bilingual_ipa.converter.english_to_ipa", side_effect=["e1", "e2"]) as mock_english,
+        patch("bilingual_ipa.conversion.english_to_ipa", side_effect=["e1", "e2"]) as mock_english,
     ):
         result = text_to_ipa(text)
 
@@ -82,7 +82,7 @@ def test_consecutive_language_segments_include_spacing_and_punctuation():
 
 
 def test_all_caps_words_are_split_before_conversion():
-    with patch("bilingual_ipa.converter.english_to_ipa", return_value="ipa") as mock_english:
+    with patch("bilingual_ipa.conversion.english_to_ipa", return_value="ipa") as mock_english:
         result = text_to_ipa("AP")
 
     assert result.phones == ["ipa", "ipa"]
@@ -90,7 +90,7 @@ def test_all_caps_words_are_split_before_conversion():
 
 
 def test_punctuation_is_followed_by_space_before_conversion():
-    with patch("bilingual_ipa.converter.english_to_ipa", return_value="ipa") as mock_english:
+    with patch("bilingual_ipa.conversion.english_to_ipa", return_value="ipa") as mock_english:
         text_to_ipa("Hello.World")
 
     assert mock_english.mock_calls == [call("Hello", keep_punct=False), call("World", keep_punct=False)]
