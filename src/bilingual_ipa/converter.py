@@ -94,7 +94,7 @@ def text_to_ipa(
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
         ipa = re.sub(r"\s+", "", ipa)
-        ipa = re.sub(r'\p{P}', '', ipa, flags=re.UNICODE)
+        ipa = re.sub(r'\\p{P}', '', ipa, flags=re.UNICODE)
         tone_marks = _NON_IPA_TONES_RE.sub(" ", ipa)
         stress_marks = _NON_STRESS_RE.sub(" ", ipa)
         phones = _IPA_TONES_STRESS_RE.sub("", ipa)
