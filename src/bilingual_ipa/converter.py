@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import List
 
-from phonemizer import phonemize
+import epitran
 
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
@@ -21,19 +22,30 @@ class LanguageSegmenter:
 
     def classify(self, segment: str) -> str | None:
         if _CHINESE_RE.match(segment):
-            return "cmn"
+            return "cmn-Hans"
         if _ENGLISH_RE.match(segment):
-            return "en-us"
+            return "eng-Latn"
         return None
 
 
 def _validate_kwargs(kwargs: dict[str, object]) -> None:
     if "language" in kwargs:
         raise ValueError("The 'language' argument is determined automatically and must not be provided.")
-    backend = kwargs.get("backend")
-    if backend is not None and backend != "espeak":
-        raise ValueError("Only the 'espeak' backend is supported.")
     kwargs.pop("backend", None)
+
+
+@lru_cache(maxsize=None)
+def _get_transliterator(language_code: str) -> epitran.Epitran:
+    if language_code == "cmn-Hans":
+        fname = epitran.download.cedict()
+        return epitran.Epitran(language_code, cedict_file=fname, tones=True)
+    elif language_code == "eng-Latn":
+        return epitran.Epitran(language_code)
+
+
+def _transliterate(language_code: str, text: str, **kwargs: object) -> str:
+    transliterator = _get_transliterator(language_code)
+    return transliterator.transliterate(text, **kwargs)
 
 
 def text_to_ipa(
@@ -41,10 +53,9 @@ def text_to_ipa(
     *,
     segmenter: LanguageSegmenter | None = None,
     get_tone_marks: bool = False,
-    get_stress_marks: bool = False,
     **phonemize_kwargs,
 ) -> str:
-    """Convert Chinese/English text into IPA using phonemizer."""
+    """Convert Chinese/English text into IPA using epitran."""
     if segmenter is None:
         segmenter = LanguageSegmenter()
 
@@ -85,17 +96,14 @@ def text_to_ipa(
 
     result: List[str] = []
     result_tone_marks: List[str] = []
-    result_stress_marks: List[str] = []
 
     for language_code, segment in grouped_segments:
         if language_code is None:
             result.append(segment)
             continue
 
-        ipa = phonemize(segment, language=language_code, backend="espeak", with_stress=True, **phonemize_kwargs)
-        print(ipa)
+        ipa = _transliterate(language_code, segment, **phonemize_kwargs)
         tone_marks = re.sub(r'\D', ' ', ipa)
-        stress_marks = re.sub(r"[^ˈ]", " ", ipa)
         phones = re.sub(r"[ˈ\d]", "", ipa)
         # if language_code == "cmn" and remove_chinese_tone_marks:
         #     ipa = re.sub(r"\d", "", ipa)
@@ -103,13 +111,10 @@ def text_to_ipa(
         #     ipa = re.sub(r"\s+", "", ipa)
         result.append(phones)
         result_tone_marks.append(tone_marks)
-        result_stress_marks.append(stress_marks)
 
     results = ["".join(result)]
     if get_tone_marks:
         results.append("".join(result_tone_marks))
-    if get_stress_marks:
-        results.append("".join(result_stress_marks))
 
     return results[0] if len(results) == 1 else tuple(results)
 
