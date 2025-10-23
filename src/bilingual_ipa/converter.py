@@ -8,7 +8,7 @@ from dragonmapper.hanzi import to_ipa as hanzi_to_ipa
 from eng_to_ipa import convert as english_to_ipa
 from dragonmapper.transcriptions import _IPA_TONES
 
-_IPA_TONES = "".join(dragonmapper.transcriptions._IPA_TONES.values()
+_IPA_TONES = "".join(dragonmapper.transcriptions._IPA_TONES.values())
 _STRESS = "ˈˌ"
 _NON_IPA_TONES_RE = re.compile(f"[^{_IPA_TONES}]")
 _NON_STRESS_RE = re.compile(f"[^{_STRESS}]")
