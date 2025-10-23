@@ -12,10 +12,25 @@ _IPA_TONES = "".join(_IPA_TONES.values())
 _STRESS = "ˈˌ"
 _NON_IPA_TONES_RE = re.compile(f"[^{_IPA_TONES}]")
 _NON_STRESS_RE = re.compile(f"[^{_STRESS}]")
-_IPA_TONES_STRESS_RE = re.compile(f"[{_IPA_TONES}{_STRESS}]")
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
+_UPPERCASE_WORD_RE = re.compile(r"\b[A-Z]{2,}\b")
+_PUNCTUATION_WITHOUT_SPACE_RE = re.compile(r"([.,!?;:])(?=[A-Za-z])")
+
+
+def _space_uppercase_word(match: re.Match[str]) -> str:
+    """Insert spaces between the letters of an uppercase word."""
+
+    word = match.group(0)
+    return " ".join(word)
+
+
+def _prepare_text(text: str) -> str:
+    """Normalize text before segmentation for IPA conversion."""
+
+    spaced_uppercase = _UPPERCASE_WORD_RE.sub(_space_uppercase_word, text)
+    return _PUNCTUATION_WITHOUT_SPACE_RE.sub(r"\1 ", spaced_uppercase)
 
 
 class LanguageSegmenter:
@@ -45,6 +60,7 @@ def text_to_ipa(
     if segmenter is None:
         segmenter = LanguageSegmenter()
 
+    text = _prepare_text(text)
     segments = segmenter.split(text)
     grouped_segments: List[tuple[str | None, str]] = []
 
@@ -88,24 +104,18 @@ def text_to_ipa(
             continue
 
         if language_code.startswith("en"):
-            ipa = english_to_ipa(segment, keep_punct=False)
+            ipa = english_to_ipa(segment)
         elif language_code == "cmn":
-            ipa = hanzi_to_ipa(segment, delimiter='')
+            ipa = hanzi_to_ipa(segment)
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
-        ipa = re.sub(r"\s+", "", ipa)
-        ipa = re.sub(r'\\p{P}', '', ipa, flags=re.UNICODE)
         tone_marks = _NON_IPA_TONES_RE.sub(" ", ipa)
         stress_marks = _NON_STRESS_RE.sub(" ", ipa)
-        phones = _IPA_TONES_STRESS_RE.sub("", ipa)
-        # if language_code == "cmn" and remove_chinese_tone_marks:
-        #     ipa = re.sub(r"\d", "", ipa)
-        # if language_code.startswith("en") and remove_english_spaces:
-        #     ipa = re.sub(r"\s+", "", ipa)
-        result.append(phones)
+        normalized = ipa.translate({ord("ˈ"): None, ord("ˌ"): None})
+        normalized = re.sub(r"\d", "", normalized)
+        result.append(normalized)
         result_tone_marks.append(tone_marks)
         result_stress_marks.append(stress_marks)
-    print(result)
     results = ["".join(result)]
     if get_tone_marks:
         results.append("".join(result_tone_marks))
