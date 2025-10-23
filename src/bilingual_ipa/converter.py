@@ -94,8 +94,8 @@ def text_to_ipa(
 
         ipa = phonemize(segment, language=language_code, backend="espeak", with_stress=True, **phonemize_kwargs)
         tone_marks = re.sub(r'\D', ' ', ipa)
-        stress_marks = re.sub(r"[^']", " ", ipa)
-        phones = re.sub(r"['\d]", "", ipa)
+        stress_marks = re.sub(r"[^ˈ]", " ", ipa)
+        phones = re.sub(r"[ˈ\d]", "", ipa)
         # if language_code == "cmn" and remove_chinese_tone_marks:
         #     ipa = re.sub(r"\d", "", ipa)
         # if language_code.startswith("en") and remove_english_spaces:
@@ -110,7 +110,7 @@ def text_to_ipa(
     if get_stress_marks:
         results.append("".join(result_stress_marks))
 
-    return tuple(results)
+    return results[0] if len(results) == 1 else tuple(results)
 
 
 __all__ = ["text_to_ipa", "LanguageSegmenter"]
