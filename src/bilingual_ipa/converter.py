@@ -40,8 +40,8 @@ def text_to_ipa(
     text: str,
     *,
     segmenter: LanguageSegmenter | None = None,
-    remove_chinese_tone_marks: bool = False,
-    remove_english_spaces: bool = False,
+    get_tone_marks: bool = False,
+    get_stress_marks: bool = False,
     **phonemize_kwargs,
 ) -> str:
     """Convert Chinese/English text into IPA using phonemizer."""
@@ -84,20 +84,33 @@ def text_to_ipa(
         grouped_segments.append((current_language, current_text))
 
     result: List[str] = []
+    result_tone_marks: List[str] = []
+    result_stress_marks: List[str] = []
 
     for language_code, segment in grouped_segments:
         if language_code is None:
             result.append(segment)
             continue
 
-        ipa = phonemize(segment, language=language_code, backend="espeak", **phonemize_kwargs)
-        if language_code == "cmn" and remove_chinese_tone_marks:
-            ipa = re.sub(r"\d", "", ipa)
-        if language_code.startswith("en") and remove_english_spaces:
-            ipa = re.sub(r"\s+", "", ipa)
-        result.append(ipa)
+        ipa = phonemize(segment, language=language_code, backend="espeak", with_stress=True, **phonemize_kwargs)
+        tone_marks = re.sub(r'\D', ' ', ipa)
+        stress_marks = re.sub(r"[^']", " ", ipa)
+        phones = re.sub(r"['\d]", "", ipa)
+        # if language_code == "cmn" and remove_chinese_tone_marks:
+        #     ipa = re.sub(r"\d", "", ipa)
+        # if language_code.startswith("en") and remove_english_spaces:
+        #     ipa = re.sub(r"\s+", "", ipa)
+        result.append(phones)
+        result_tone_marks.append(tone_marks)
+        result_stress_marks.append(stress_marks)
 
-    return "".join(result)
+    results = ["".join(result)]
+    if get_tone_marks:
+        results.append("".join(result_tone_marks))
+    if get_stress_marks:
+        results.append("".join(result_stress_marks))
+
+    return tuple(results)
 
 
 __all__ = ["text_to_ipa", "LanguageSegmenter"]
