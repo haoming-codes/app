@@ -36,8 +36,11 @@ def _validate_kwargs(kwargs: dict[str, object]) -> None:
 
 @lru_cache(maxsize=None)
 def _get_transliterator(language_code: str) -> epitran.Epitran:
-    epitran.download.cedict()
-    return epitran.Epitran(language_code, cedict_file="cedict_ts.u8", tones=True)
+    if language_code == "cmn-Hans":
+        fname = epitran.download.cedict()
+        return epitran.Epitran(language_code, cedict_file=fname, tones=True)
+    elif language_code == "eng-Latn":
+        return epitran.Epitran(language_code)
 
 
 def _transliterate(language_code: str, text: str, **kwargs: object) -> str:
