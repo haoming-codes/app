@@ -14,9 +14,9 @@ def test_compute_distances_returns_expected_metrics(metrics):
     assert set(distances) == set(AVAILABLE_DISTANCE_METRICS)
     assert distances["phonetic_edit_distance"] == pytest.approx(0.0322580645)
     assert distances["aline"] == pytest.approx(0.2857142857)
-    assert distances["feature_edit_distance"] == pytest.approx(0.0416666667)
-    assert distances["hamming_feature_edit_distance"] == pytest.approx(0.0416666667)
-    assert distances["weighted_feature_edit_distance"] == pytest.approx(0.25)
+    assert distances["feature_edit_distance_div_maxlen"] == pytest.approx(0.0416666667)
+    assert distances["hamming_feature_edit_distance_div_maxlen"] == pytest.approx(0.0416666667)
+    assert distances["weighted_feature_edit_distance_div_maxlen"] == pytest.approx(0.25)
 
 
 def test_compute_distances_handles_single_metric_string():
