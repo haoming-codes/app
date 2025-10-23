@@ -1,5 +1,5 @@
 """Public API for bilingual IPA conversion."""
-from .converter import LanguageSegmenter, text_to_ipa
+from .converter import IPAConversionResult, LanguageSegmenter, text_to_ipa
 from .phone_distance import (
     AVAILABLE_DISTANCE_METRICS,
     AggregateStrategy,
@@ -12,6 +12,7 @@ from .phone_distance import (
 __all__ = [
     "text_to_ipa",
     "LanguageSegmenter",
+    "IPAConversionResult",
     "AVAILABLE_DISTANCE_METRICS",
     "AggregateStrategy",
     "PhoneDistanceCallable",
