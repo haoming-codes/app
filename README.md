@@ -1,6 +1,6 @@
 # bilingual-ipa
 
-A small utility for turning Chinese/English bilingual text into its IPA representation using [`phonemizer`](https://github.com/bootphon/phonemizer) with the `espeak` backend.
+A small utility for turning Chinese/English bilingual text into its IPA representation using [`epitran`](https://github.com/dmort27/epitran).
 
 ## Installation
 
@@ -17,4 +17,4 @@ ipa = text_to_ipa("Hello你好")
 print(ipa)
 ```
 
-`text_to_ipa` automatically detects Chinese and English segments, calls `phonemizer.phonemize` separately for each language with the correct language code (`cmn` for Chinese and `en` for English), and returns the combined IPA transcription. You can pass any additional keyword arguments supported by `phonemizer.phonemize` (such as `strip=True`) and they will be forwarded automatically.
+`text_to_ipa` automatically detects Chinese and English segments, transliterates Chinese text with `Epitran('cmn-Hans', cedict_file='cedict_ts.u8', tones=True)` and English text with `Epitran('eng-Latn')`, and returns the combined IPA transcription.
