@@ -51,22 +51,51 @@ def text_to_ipa(
     _validate_kwargs(phonemize_kwargs)
 
     segments = segmenter.split(text)
-    result: List[str] = []
+    grouped_segments: List[tuple[str | None, str]] = []
+
+    current_text: str = ""
+    current_language: str | None = None
 
     for segment in segments:
         language_code = segmenter.classify(segment)
-        if language_code is None:
-            if len(segment.strip()) > 0:
-                result.append(segment)
+
+        if not current_text:
+            current_text = segment
+            current_language = language_code
             continue
+
+        if language_code == current_language or (
+            language_code is None and current_language is not None
+        ):
+            current_text += segment
+            continue
+
+        if current_language is None and language_code is not None:
+            grouped_segments.append((current_language, current_text))
+            current_text = segment
+            current_language = language_code
+            continue
+
+        grouped_segments.append((current_language, current_text))
+        current_text = segment
+        current_language = language_code
+
+    if current_text:
+        grouped_segments.append((current_language, current_text))
+
+    result: List[str] = []
+
+    for language_code, segment in grouped_segments:
+        if language_code is None:
+            result.append(segment)
+            continue
+
         ipa = phonemize(segment, language=language_code, backend="espeak", **phonemize_kwargs)
         if language_code == "cmn" and remove_chinese_tone_marks:
             ipa = re.sub(r"\d", "", ipa)
-        if language_code == "en" and remove_english_spaces:
+        if language_code.startswith("en") and remove_english_spaces:
             ipa = re.sub(r"\s+", "", ipa)
-        print(f"'{ipa}'")
         result.append(ipa)
-    print(result)
 
     return "".join(result)
 
