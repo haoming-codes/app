@@ -93,6 +93,7 @@ def text_to_ipa(
             continue
 
         ipa = phonemize(segment, language=language_code, backend="espeak", with_stress=True, **phonemize_kwargs)
+        print(ipa)
         tone_marks = re.sub(r'\D', ' ', ipa)
         stress_marks = re.sub(r"[^ˈ]", " ", ipa)
         phones = re.sub(r"[ˈ\d]", "", ipa)
