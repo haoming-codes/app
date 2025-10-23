@@ -12,9 +12,9 @@ def test_text_to_ipa_processes_bilingual_text():
     ):
         result = text_to_ipa("Hello你好")
 
-    assert result == "hələʊni˧˥˩"
-    assert mock_english.mock_calls == [call("Hello")]
-    assert mock_chinese.mock_calls == [call("你好")]
+    assert result == "hələʊni"
+    assert mock_english.mock_calls == [call("Hello", keep_punct=False)]
+    assert mock_chinese.mock_calls == [call("你好", delimiter="")]
 
 
 def test_text_to_ipa_preserves_non_language_tokens():
@@ -27,9 +27,9 @@ def test_text_to_ipa_preserves_non_language_tokens():
     ):
         result = text_to_ipa("Hello, 世界!你好")
 
-    assert result == "hələʊ, ʂɤ˥˩ tɕjɛ˥˩!ni˧˥˩"
-    assert mock_english.mock_calls == [call("Hello, ")]
-    assert mock_chinese.mock_calls == [call("世界!你好")]
+    assert result == "hələʊ,ʂɤtɕjɛ!ni"
+    assert mock_english.mock_calls == [call("Hello, ", keep_punct=False)]
+    assert mock_chinese.mock_calls == [call("世界!你好", delimiter="")]
 
 
 def test_kwargs_are_rejected():
@@ -45,8 +45,16 @@ def test_consecutive_language_segments_include_spacing_and_punctuation():
     ):
         result = text_to_ipa(text)
 
-    assert result == "ipaipaipa"
-    assert mock_chinese.mock_calls == [call("你好。"), call("你好, 你在吗")]
-    assert mock_english.mock_calls == [call("hello world ")]
+    assert result == "ipa1ipa2ipa3"
+    assert mock_chinese.mock_calls == [call("你好。", delimiter=""), call("你好, 你在吗", delimiter="")]
+    assert mock_english.mock_calls == [call("hello world ", keep_punct=False)]
+
+
+def test_all_caps_english_words_are_space_separated_before_conversion():
+    text = "AP AG.AL App"
+    with patch("bilingual_ipa.converter.english_to_ipa", return_value="ipa") as mock_english:
+        text_to_ipa(text)
+
+    assert mock_english.mock_calls == [call("A P A G. A L App", keep_punct=False)]
 
 

@@ -16,6 +16,7 @@ _IPA_TONES_STRESS_RE = re.compile(f"[{_IPA_TONES}{_STRESS}]")
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
+_ALL_CAPS_RE = re.compile(r"[A-Z]{2,}")
 
 
 class LanguageSegmenter:
@@ -32,6 +33,11 @@ class LanguageSegmenter:
         if _ENGLISH_RE.match(segment):
             return "en-us"
         return None
+
+
+def _space_separate_all_caps_words(text: str) -> str:
+    text = _ALL_CAPS_RE.sub(lambda match: " ".join(match.group(0)), text)
+    return re.sub(r"(?<=[^\w\s])(?=[A-Z])", " ", text)
 
 
 def text_to_ipa(
@@ -88,6 +94,7 @@ def text_to_ipa(
             continue
 
         if language_code.startswith("en"):
+            segment = _space_separate_all_caps_words(segment)
             ipa = english_to_ipa(segment, keep_punct=False)
         elif language_code == "cmn":
             ipa = hanzi_to_ipa(segment, delimiter='')
