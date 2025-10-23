@@ -13,8 +13,11 @@ pip install -e .
 ```python
 from bilingual_ipa import text_to_ipa
 
-ipa = text_to_ipa("Hello你好")
-print(ipa)
+ipa_result = text_to_ipa("Hello你好")
+print(ipa_result.phones)
+print(ipa_result.tone_marks)
+print(ipa_result.stress_marks)
+print(ipa_result.syllable_counts)
 ```
 
-`text_to_ipa` automatically detects Chinese and English segments, converts English text with `eng_to_ipa.convert`, converts Chinese Hanzi with `dragonmapper.hanzi.to_ipa`, and returns the combined IPA transcription.
+`text_to_ipa` automatically detects Chinese and English segments, converts English text with `eng_to_ipa.convert`, converts Chinese Hanzi with `dragonmapper.hanzi.to_ipa`, and returns an `IPAConversionResult` dataclass containing phones, tone marks, stress marks, and syllable counts for each English word or Chinese character in the text.

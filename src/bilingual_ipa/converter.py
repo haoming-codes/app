@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import List
 
 from dragonmapper.hanzi import to_ipa as hanzi_to_ipa
@@ -17,6 +18,15 @@ _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
 _ALL_CAPS_WORD_RE = re.compile(r"\b[A-Z]{2,}\b")
+_IPA_VOWEL_RE = re.compile(r"[aeiouɑæɐɜɞəɘɵøœoɔɒʌʊuɯɨʉiɪeɛyʏɜːɝɚ]+")
+
+
+@dataclass(frozen=True)
+class IPAConversionResult:
+    phones: List[str]
+    tone_marks: List[str]
+    stress_marks: List[str]
+    syllable_counts: List[int]
 
 
 class LanguageSegmenter:
@@ -43,9 +53,7 @@ def text_to_ipa(
     text: str,
     *,
     segmenter: LanguageSegmenter | None = None,
-    get_tone_marks: bool = False,
-    get_stress_marks: bool = False,
-) -> str:
+) -> IPAConversionResult:
     """Convert Chinese/English text into IPA using ``eng_to_ipa`` and ``dragonmapper``."""
     if segmenter is None:
         segmenter = LanguageSegmenter()
@@ -83,41 +91,52 @@ def text_to_ipa(
     if current_text:
         grouped_segments.append((current_language, current_text))
 
-    result: List[str] = []
-    result_tone_marks: List[str] = []
-    result_stress_marks: List[str] = []
+    phones: List[str] = []
+    tone_marks: List[str] = []
+    stress_marks: List[str] = []
+    syllable_counts: List[int] = []
 
     for language_code, segment in grouped_segments:
         if language_code is None:
-            result.append(segment)
             continue
 
-        segment = re.sub(r"\W+", ' ', segment)
         if language_code.startswith("en"):
-            ipa = english_to_ipa(_normalize_english_segment(segment), keep_punct=False)
+            normalized_segment = _normalize_english_segment(segment)
+            cleaned_segment = re.sub(r"\W+", " ", normalized_segment)
+            words = [word for word in cleaned_segment.split() if word]
+            for word in words:
+                ipa = english_to_ipa(word, keep_punct=False)
+                ipa = re.sub(r"\s+", "", ipa)
+                phones.append(_IPA_TONES_STRESS_RE.sub("", ipa))
+                tone_marks.append(_NON_IPA_TONES_RE.sub("", ipa))
+                stress_marks.append(_NON_STRESS_RE.sub("", ipa))
+                syllable_counts.append(_count_syllables(phones[-1]))
         elif language_code == "cmn":
-            ipa = hanzi_to_ipa(segment, delimiter='')
+            for character in segment:
+                if _CHINESE_RE.match(character):
+                    ipa = hanzi_to_ipa(character, delimiter="")
+                    ipa = re.sub(r"\s+", "", ipa)
+                    phones.append(_IPA_TONES_STRESS_RE.sub("", ipa))
+                    tone_marks.append(_NON_IPA_TONES_RE.sub("", ipa))
+                    stress_marks.append(_NON_STRESS_RE.sub("", ipa))
+                    syllable_counts.append(1)
+                else:
+                    continue
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
-        ipa = re.sub(r"\s+", "", ipa)
-        tone_marks = _NON_IPA_TONES_RE.sub(" ", ipa)
-        stress_marks = _NON_STRESS_RE.sub(" ", ipa)
-        phones = _IPA_TONES_STRESS_RE.sub("", ipa)
-        # if language_code == "cmn" and remove_chinese_tone_marks:
-        #     ipa = re.sub(r"\d", "", ipa)
-        # if language_code.startswith("en") and remove_english_spaces:
-        #     ipa = re.sub(r"\s+", "", ipa)
-        result.append(phones)
-        result_tone_marks.append(tone_marks)
-        result_stress_marks.append(stress_marks)
-        
-    results = ["".join(result)]
-    if get_tone_marks:
-        results.append("".join(result_tone_marks))
-    if get_stress_marks:
-        results.append("".join(result_stress_marks))
 
-    return results[0] if len(results) == 1 else tuple(results)
+    return IPAConversionResult(
+        phones=phones,
+        tone_marks=tone_marks,
+        stress_marks=stress_marks,
+        syllable_counts=syllable_counts,
+    )
 
 
-__all__ = ["text_to_ipa", "LanguageSegmenter"]
+def _count_syllables(phones: str) -> int:
+    vowel_matches = _IPA_VOWEL_RE.findall(phones)
+    count = len(vowel_matches)
+    return count or 1
+
+
+__all__ = ["text_to_ipa", "LanguageSegmenter", "IPAConversionResult"]
