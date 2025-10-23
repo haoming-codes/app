@@ -8,6 +8,7 @@ from .phone_distance import (
     compute_distances,
     phone_distance,
 )
+from .phonetic_search import WindowDistance, window_phonetic_distances
 
 __all__ = [
     "text_to_ipa",
@@ -19,4 +20,6 @@ __all__ = [
     "combine_distances",
     "compute_distances",
     "phone_distance",
+    "WindowDistance",
+    "window_phonetic_distances",
 ]
