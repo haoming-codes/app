@@ -84,7 +84,7 @@ def text_to_ipa(
         if language_code.startswith("en"):
             ipa = english_to_ipa(segment)
         elif language_code == "cmn":
-            ipa = hanzi_to_ipa(segment)
+            ipa = hanzi_to_ipa(segment, delimiter='')
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
         tone_marks = re.sub(r'\D', ' ', ipa)
@@ -97,7 +97,7 @@ def text_to_ipa(
         result.append(phones)
         result_tone_marks.append(tone_marks)
         result_stress_marks.append(stress_marks)
-
+    print(result)
     results = ["".join(result)]
     if get_tone_marks:
         results.append("".join(result_tone_marks))
