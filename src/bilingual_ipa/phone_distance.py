@@ -18,9 +18,9 @@ _panphon_distance = PanphonDistance()
 AVAILABLE_DISTANCE_METRICS: dict[str, PhoneDistanceCallable] = {
     "phonetic_edit_distance": _phonetic_edit_distance.dist,
     "aline": _aline_distance.dist,
-    "feature_edit_distance": _panphon_distance.feature_edit_distance,
-    "hamming_feature_edit_distance": _panphon_distance.hamming_feature_edit_distance,
-    "weighted_feature_edit_distance": _panphon_distance.weighted_feature_edit_distance,
+    "feature_edit_distance_div_maxlen": _panphon_distance.feature_edit_distance_div_maxlen,
+    "hamming_feature_edit_distance_div_maxlen": _panphon_distance.hamming_feature_edit_distance_div_maxlen,
+    "weighted_feature_edit_distance_div_maxlen": _panphon_distance.weighted_feature_edit_distance_div_maxlen,
 }
 
 AggregateStrategy = Literal["mean", "sum", "min", "max"]
