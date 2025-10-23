@@ -16,6 +16,8 @@ _IPA_TONES_STRESS_RE = re.compile(f"[{_IPA_TONES}{_STRESS}]")
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
+_ALL_CAPS_WORD_RE = re.compile(r"\b[A-Z]{2,}\b")
+_PUNCT_NEEDS_SPACE_RE = re.compile(r"([.,;:!?])(?!\s|$)")
 
 
 class LanguageSegmenter:
@@ -32,6 +34,13 @@ class LanguageSegmenter:
         if _ENGLISH_RE.match(segment):
             return "en-us"
         return None
+
+
+def _normalize_english_segment(segment: str) -> str:
+    """Insert spaces after punctuation and between letters in all-caps words."""
+
+    segment = _PUNCT_NEEDS_SPACE_RE.sub(r"\1 ", segment)
+    return _ALL_CAPS_WORD_RE.sub(lambda match: " ".join(match.group(0)), segment)
 
 
 def text_to_ipa(
@@ -88,7 +97,7 @@ def text_to_ipa(
             continue
 
         if language_code.startswith("en"):
-            ipa = english_to_ipa(segment, keep_punct=False)
+            ipa = english_to_ipa(_normalize_english_segment(segment), keep_punct=False)
         elif language_code == "cmn":
             ipa = hanzi_to_ipa(segment, delimiter='')
         else:
