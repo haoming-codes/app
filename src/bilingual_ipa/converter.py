@@ -6,7 +6,13 @@ from typing import List
 
 from dragonmapper.hanzi import to_ipa as hanzi_to_ipa
 from eng_to_ipa import convert as english_to_ipa
+from dragonmapper.transcriptions import _IPA_TONES
 
+_IPA_TONES = "".join(dragonmapper.transcriptions._IPA_TONES.values()
+_STRESS = "ˈˌ"
+_NON_IPA_TONES_RE = re.compile(f"[^{_IPA_TONES}]")
+_NON_STRESS_RE = re.compile(f"[^{_STRESS}]")
+_IPA_TONES_STRESS_RE = re.compile(f"[{_IPA_TONES}{_STRESS}]")
 _CHINESE_RE = re.compile(r"^[\u4e00-\u9fff]+$")
 _ENGLISH_RE = re.compile(r"^[A-Za-z]+$")
 _SEGMENT_RE = re.compile(r"([\u4e00-\u9fff]+|[A-Za-z]+|\s+|[^\u4e00-\u9fffA-Za-z\s]+)")
@@ -88,9 +94,9 @@ def text_to_ipa(
         else:
             raise ValueError(f"Unsupported language code: {language_code}")
         ipa = re.sub(r"\s+", "", ipa)
-        tone_marks = re.sub(r'\D', ' ', ipa)
-        stress_marks = re.sub(r"[^ˈ]", " ", ipa)
-        phones = re.sub(r"[ˈ\d]", "", ipa)
+        tone_marks = _NON_IPA_TONES_RE.sub(" ", ipa)
+        stress_marks = _NON_STRESS_RE.sub(" ", ipa)
+        phones = _IPA_TONES_STRESS_RE.sub("", ipa)
         # if language_code == "cmn" and remove_chinese_tone_marks:
         #     ipa = re.sub(r"\d", "", ipa)
         # if language_code.startswith("en") and remove_english_spaces:
