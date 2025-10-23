@@ -126,7 +126,7 @@ class ToneDistanceCalculator(DistanceCalculator):
         if tones_right.size == 0:
             return float(tones_left.size)
 
-        return float(twe_distance(tones_left, tones_right))
+        return float(twe_distance(tones_left, tones_right))/(len(tones_left)+len(tones_right))
 
 
 class CompositeDistanceCalculator(DistanceCalculator):
