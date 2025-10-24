@@ -16,6 +16,7 @@ dependencies = [
     "abydos @ git+https://github.com/denizberkin/abydos.git",
     "panphon>=0.20",
     "sktime>=0.24.0",
+    "openai>=1.0.0",
 ]
 
 [project.urls]
