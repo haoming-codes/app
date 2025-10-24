@@ -1,4 +1,9 @@
 """Public API for bilingual IPA conversion."""
+from .contextual_correction import (
+    ASRContextualCorrector,
+    CorrectionCandidate,
+    OpenRouterLLMClient,
+)
 from .conversion import IPAConversionResult, LanguageSegmenter, text_to_ipa
 from .distances import (
     AggregateStrategy,
@@ -29,4 +34,7 @@ __all__ = [
     "window_phonetic_distances",
     "PhoneticWindowRetriever",
     "PhoneticWindowRewriter",
+    "CorrectionCandidate",
+    "OpenRouterLLMClient",
+    "ASRContextualCorrector",
 ]
