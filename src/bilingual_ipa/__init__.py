@@ -1,4 +1,5 @@
 """Public API for bilingual IPA conversion."""
+from .asr_correction import ASRContextualCorrector, CorrectionCandidate
 from .conversion import IPAConversionResult, LanguageSegmenter, text_to_ipa
 from .distances import (
     AggregateStrategy,
@@ -19,6 +20,8 @@ __all__ = [
     "text_to_ipa",
     "LanguageSegmenter",
     "IPAConversionResult",
+    "ASRContextualCorrector",
+    "CorrectionCandidate",
     "AggregateStrategy",
     "DistanceCalculator",
     "PhoneDistanceCallable",
