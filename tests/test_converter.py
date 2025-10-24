@@ -16,6 +16,7 @@ def test_text_to_ipa_processes_bilingual_text():
     assert result.tone_marks == ["", "˧˥˩", "˧˥˩"]
     assert result.stress_marks == ["ˈ", "", ""]
     assert result.syllable_counts == [2, 1, 1]
+    assert result.tokens == ["Hello", "你", "好"]
     assert mock_english.mock_calls == [call("Hello", keep_punct=False)]
     assert mock_chinese.mock_calls == [call("你", delimiter=""), call("好", delimiter="")]
 
@@ -34,6 +35,7 @@ def test_text_to_ipa_preserves_non_language_tokens():
     assert result.tone_marks == ["", "˥˩", "˥˩", "˧˥˩", "˥˩"]
     assert result.stress_marks == ["ˈ", "", "", "", ""]
     assert result.syllable_counts == [2, 1, 1, 1, 1]
+    assert result.tokens == ["Hello", "世", "界", "你", "好"]
     assert mock_english.mock_calls == [call("Hello", keep_punct=False)]
     assert mock_chinese.mock_calls == [
         call("世", delimiter=""),
@@ -69,6 +71,7 @@ def test_consecutive_language_segments_include_spacing_and_punctuation():
 
     assert result.phones == ["c1", "c2", "e1", "e2", "c3", "c4", "c5", "c6", "c7"]
     assert result.syllable_counts == [1, 1, 1, 1, 1, 1, 1, 1, 1]
+    assert result.tokens == ["你", "好", "hello", "world", "你", "好", "你", "在", "吗"]
     assert mock_chinese.mock_calls == [
         call("你", delimiter=""),
         call("好", delimiter=""),
@@ -86,6 +89,7 @@ def test_all_caps_words_are_split_before_conversion():
         result = text_to_ipa("AP")
 
     assert result.phones == ["ipa", "ipa"]
+    assert result.tokens == ["A", "P"]
     assert mock_english.mock_calls == [call("A", keep_punct=False), call("P", keep_punct=False)]
 
 

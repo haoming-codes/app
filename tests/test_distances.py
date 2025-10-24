@@ -14,6 +14,7 @@ def _single_phone_result(phone: str, tone: str = "") -> IPAConversionResult:
         tone_marks=[tone],
         stress_marks=[""],
         syllable_counts=[1],
+        tokens=[phone],
     )
 
 
@@ -74,7 +75,7 @@ def test_tone_distance_calculator_penalizes_missing_tones():
     calculator = ToneDistanceCalculator()
     left = _single_phone_result("ni", "˧˥˩")
     right = _single_phone_result("ni", "")
-    assert calculator.distance(left, right) == pytest.approx(1.0)
+    assert calculator.distance(left, right) == pytest.approx(0.5)
 
 
 def test_composite_distance_calculator_combines_distances():

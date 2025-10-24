@@ -27,6 +27,7 @@ class IPAConversionResult:
     tone_marks: List[str]
     stress_marks: List[str]
     syllable_counts: List[int]
+    tokens: List[str]
 
 
 class LanguageSegmenter:
@@ -95,6 +96,7 @@ def text_to_ipa(
     tone_marks: List[str] = []
     stress_marks: List[str] = []
     syllable_counts: List[int] = []
+    tokens: List[str] = []
 
     for language_code, segment in grouped_segments:
         if language_code is None:
@@ -111,6 +113,7 @@ def text_to_ipa(
                 tone_marks.append(_NON_IPA_TONES_RE.sub("", ipa))
                 stress_marks.append(_NON_STRESS_RE.sub("", ipa))
                 syllable_counts.append(_count_syllables(phones[-1]))
+                tokens.append(word)
         elif language_code == "cmn":
             for character in segment:
                 if _CHINESE_RE.match(character):
@@ -120,6 +123,7 @@ def text_to_ipa(
                     tone_marks.append(_NON_IPA_TONES_RE.sub("", ipa))
                     stress_marks.append(_NON_STRESS_RE.sub("", ipa))
                     syllable_counts.append(1)
+                    tokens.append(character)
                 else:
                     continue
         else:
@@ -130,6 +134,7 @@ def text_to_ipa(
         tone_marks=tone_marks,
         stress_marks=stress_marks,
         syllable_counts=syllable_counts,
+        tokens=tokens,
     )
 
 

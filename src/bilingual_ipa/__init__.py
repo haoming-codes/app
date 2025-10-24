@@ -8,7 +8,12 @@ from .distances import (
     PhoneDistanceCalculator,
     ToneDistanceCalculator,
 )
-from .phonetic_search import WindowDistance, window_phonetic_distances
+from .phonetic_search import (
+    PhoneticWindowRetriever,
+    PhoneticWindowRewriter,
+    WindowDistance,
+    window_phonetic_distances,
+)
 
 __all__ = [
     "text_to_ipa",
@@ -22,4 +27,6 @@ __all__ = [
     "CompositeDistanceCalculator",
     "WindowDistance",
     "window_phonetic_distances",
+    "PhoneticWindowRetriever",
+    "PhoneticWindowRewriter",
 ]
